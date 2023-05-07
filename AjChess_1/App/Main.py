@@ -2,7 +2,7 @@
 y ejecutar la interfaz gráfica. """
 
 import pygame as pg
-from App import Motor
+import Motor
 
 ancho = altura = 440  # Tamaño de la pantalla
 dimension = 8  # El tablero tiene dimensión 8x8
