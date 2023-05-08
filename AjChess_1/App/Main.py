@@ -56,7 +56,7 @@ def main():
                     mov = Motor.Movimiento(clicks[0], clicks[1], partida.tablero)
                     for i in range(len(movimientos_legales)):
                         if mov == movimientos_legales[i]:
-                            partida.Mover(mov)
+                            partida.Mover(movimientos_legales[i])
                             mov_sw = True
                             CasillaSeleccionada = ()
                             clicks = []
