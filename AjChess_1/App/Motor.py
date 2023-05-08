@@ -238,18 +238,19 @@ class Partida:  # Resolviendo en passant y enroque, video 8 min 29:36
                 if not piezaClavada or drc_clavada == (mov_num, -1):
                     if self.tablero.casillas[fila + mov_num][col - 1].color == enemigo:
                         movs.append(Movimiento((fila, col), (fila + mov_num, col - 1), self.tablero))
-                    if len(self.cas_enPassant) > 0:
-                        if (fila + mov_num) == self.cas_enPassant[0] and col - 1 == self.cas_enPassant[1]:
-                            movs.append(Movimiento((fila, col), (fila + mov_num, col - 1), self.tablero, b_enPassant=True))
+
+            if len(self.cas_enPassant) > 0:
+                if (fila + mov_num) == self.cas_enPassant[0] and col - 1 == self.cas_enPassant[1]:
+                    movs.append(Movimiento((fila, col), (fila + mov_num, col - 1), self.tablero, b_enPassant=True))
 
         if col + 1 <= 7:  # Captura por derecha
             if self.tablero.casillas[fila + mov_num][col + 1] is not None:
                 if not piezaClavada or drc_clavada == (mov_num, 1):
                     if self.tablero.casillas[fila + mov_num][col + 1].color == enemigo:
                         movs.append(Movimiento((fila, col), (fila + mov_num, col + 1), self.tablero))
-                    if len(self.cas_enPassant) > 0:
-                        if (fila + mov_num) == self.cas_enPassant[0] and col + 1 == self.cas_enPassant[1]:
-                            movs.append(Movimiento((fila, col), (fila + mov_num, col + 1), self.tablero, b_enPassant=True))
+            if len(self.cas_enPassant) > 0:
+                if (fila + mov_num) == self.cas_enPassant[0] and col + 1 == self.cas_enPassant[1]:
+                    movs.append(Movimiento((fila, col), (fila + mov_num, col + 1), self.tablero, b_enPassant=True))
 
     def getMovimientosTorre(self, fila, col, movs):
 
