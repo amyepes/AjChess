@@ -29,6 +29,7 @@ def main():
     movimientos_legales = partida.movimientos_legales()
     for mm in movimientos_legales:
         print(mm.getNotacion(), end=' ')
+    print()
     mov_sw = False
     CargaImagen()
     ejecutando = True
@@ -51,45 +52,40 @@ def main():
                 else:
                     CasillaSeleccionada = (fila, col)
                     clicks.append(CasillaSeleccionada)  # Se guardan los dos clicks del usuario
-                if len(clicks) == 2:
-                    if partida.tablero.casillas[clicks[0][0]][clicks[0][1]] is None:
-                        CasillaSeleccionada = ()
-                        clicks = []
-                    else:
-                        mov = Motor.Movimiento(clicks[0], clicks[1], partida.tablero)
-                        for i in range(len(movimientos_legales)):
-                            if mov == movimientos_legales[i]:
-                                partida.Mover(mov)
-                                print(f"\nMovimiento realizado: {mov.getNotacion()}")
-                                mov_sw = True
-                                CasillaSeleccionada = ()
-                                clicks = []
-                                print('Turno blancas' if partida.turnoBlanco else 'Turno negras')
-                        if not mov_sw:
-                            clicks = [CasillaSeleccionada]
+                if len(clicks) == 2 and partida.tablero.casillas[clicks[0][0]][clicks[0][1]] is not None:
+                    mov = Motor.Movimiento(clicks[0], clicks[1], partida.tablero)
+                    for i in range(len(movimientos_legales)):
+                        if mov == movimientos_legales[i]:
+                            partida.Mover(mov)
+                            mov_sw = True
+                            CasillaSeleccionada = ()
+                            clicks = []
+                            print('Turno blancas' if partida.turnoBlanco else 'Turno negras')
+                    if not mov_sw:
+                        clicks = [CasillaSeleccionada]
             elif e.type == pg.KEYDOWN:  # Evento de tecla presionada
                 if e.key == pg.K_z:  # Tecla z para deshacer el último movimiento
                     if len(partida.movimientos) != 0:
                         partida.Deshacer()
                         CasillaSeleccionada = ()
                         clicks = []
-                        print('\nTurno blancas' if partida.turnoBlanco else '\nTurno negras')
+                        print('Turno blancas' if partida.turnoBlanco else 'Turno negras')
                         mov_sw = True
         if mov_sw:
-            print('Revisando movimientos legales...')
             movimientos_legales = partida.movimientos_legales()
             for mm in movimientos_legales:
                 print(mm.getNotacion(), end=' ')
+            print()
             mov_sw = False
         MostrarPartida(pantalla, partida)
+        reloj.tick(fps)
+        pg.display.flip()
         if partida.jaqueMate:
             print('Jaque mate')
             ejecutando = False
         elif partida.staleMate:
             print('Empate por ahogado')
             ejecutando = False
-        reloj.tick(fps)
-        pg.display.flip()
 
 
 # Dibuja el tablero de ajedrez

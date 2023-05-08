@@ -2,7 +2,7 @@
 determina movimietos legales y realiza los movimientos. """
 
 
-class Partida:
+class Partida:  # Resolviendo en passant y enroque, video 8 min 29:36
     def __init__(self):
         self.tablero = Tablero()
         self.turnoBlanco = True
@@ -17,7 +17,7 @@ class Partida:
         self.jaques = []  # Lista de piezas que dan jaque: (posición, dirección)
         self.jaqueMate = False
         self.staleMate = False
-        self.enPassant = ()  # Casilla para en passant
+        self.cas_enPassant = ()  # Casilla para captura en passant
         self.enroqueBlancoCorto = True
         self.enroqueBlancoLargo = True
         self.enroqueNegroCorto = True
@@ -29,17 +29,17 @@ class Partida:
         self.tablero.casillas[mvm.fil_inicio][mvm.col_inicio] = None
         self.tablero.casillas[mvm.fil_fin][mvm.col_fin] = mvm.piezaMovida
         self.movimientos.append(mvm)  # Guarda el movimiento en la lista de movimientos
+        self.turnoBlanco = not self.turnoBlanco  # Cambia el turno
         if mvm.piezaMovida.tipo == "K":  # Actualiza las posiciones del rey si se mueve
-            if self.turnoBlanco:
+            if mvm.piezaMovida.color == "w":
                 self.casillaReyBlanco = (mvm.fil_fin, mvm.col_fin)
             else:
                 self.casillaReyNegro = (mvm.fil_fin, mvm.col_fin)
-        self.turnoBlanco = not self.turnoBlanco  # Cambia el turno
 
         if mvm.piezaMovida.tipo == "p" and abs(mvm.fil_inicio - mvm.fil_fin) == 2:  # Si el peón se mueve 2 casillas
-            self.enPassant = ((mvm.fil_inicio + mvm.fil_fin) // 2, mvm.col_inicio)
+            self.cas_enPassant = ((mvm.fil_inicio + mvm.fil_fin) // 2, mvm.col_inicio)
         else:  # Si no se mueve 2 casillas
-            self.enPassant = ()
+            self.cas_enPassant = ()
 
         if mvm.enPassant:  # Si se captura en passant
             self.tablero.casillas[mvm.fil_inicio][mvm.col_fin] = None  # Elimina el peón capturado
@@ -68,16 +68,18 @@ class Partida:
             self.tablero.casillas[mvm.fil_fin][mvm.col_fin] = mvm.piezaCapturada
             self.turnoBlanco = not self.turnoBlanco
             if mvm.piezaMovida.tipo == "K":
-                if self.turnoBlanco:
+                if mvm.piezaMovida.color == "w":
                     self.casillaReyBlanco = (mvm.fil_inicio, mvm.col_inicio)
                 else:
                     self.casillaReyNegro = (mvm.fil_inicio, mvm.col_inicio)
+
             if mvm.enPassant:
                 self.tablero.casillas[mvm.fil_fin][mvm.col_fin] = None
                 self.tablero.casillas[mvm.fil_inicio][mvm.col_fin] = mvm.piezaCapturada
-                self.enPassant = (mvm.fil_fin, mvm.col_fin)
+                self.cas_enPassant = (mvm.fil_fin, mvm.col_fin)
+
             if mvm.piezaMovida.tipo == 'p' and abs(mvm.fil_inicio - mvm.fil_fin) == 2:
-                self.enPassant = ()
+                self.cas_enPassant = ()
 
             self.registroEnroquesPosibles.pop()
             enroquesPosibles = self.registroEnroquesPosibles[-1]
@@ -206,6 +208,7 @@ class Partida:
         return movs
 
     def getMovimientosPeon(self, fila, col, movs):
+
         piezaClavada = False
         drc_clavada = ()
         for i in range(len(self.clavadas) - 1, -1, -1):
@@ -218,21 +221,15 @@ class Partida:
         if self.turnoBlanco:
             mov_num = -1
             fil_inicio = 6
-            fil_final = 0
             enemigo = "b"
         else:
             mov_num = 1
             fil_inicio = 1
-            fil_final = 7
             enemigo = "w"
-        coronacionPeon = False
 
         if self.tablero.casillas[fila + mov_num][col] is None:  # Movimiento de una casilla
             if not piezaClavada or drc_clavada == (mov_num, 0):
-                if fila + mov_num == fil_final:
-                    coronacionPeon = True
-                movs.append(Movimiento((fila, col), (fila + mov_num, col), self.tablero,
-                                       coronacionPeon=coronacionPeon))
+                movs.append(Movimiento((fila, col), (fila + mov_num, col), self.tablero))
                 if fila == fil_inicio and self.tablero.casillas[fila + 2 * mov_num][col] is None:
                     movs.append(Movimiento((fila, col), (fila + 2 * mov_num, col), self.tablero))
 
@@ -240,27 +237,22 @@ class Partida:
             if self.tablero.casillas[fila + mov_num][col - 1] is not None:
                 if not piezaClavada or drc_clavada == (mov_num, -1):
                     if self.tablero.casillas[fila + mov_num][col - 1].color == enemigo:
-                        if fila + mov_num == fil_final:
-                            coronacionPeon = True
-                        movs.append(Movimiento((fila, col), (fila + mov_num, col - 1), self.tablero,
-                                               coronacionPeon=coronacionPeon))
-                    if (fila + mov_num, col - 1) == self.enPassant:
-                        movs.append(Movimiento((fila, col), (fila + mov_num, col - 1), self.tablero,
-                                               enPassantPosible=True))
+                        movs.append(Movimiento((fila, col), (fila + mov_num, col - 1), self.tablero))
+                    if len(self.cas_enPassant) > 0:
+                        if (fila + mov_num) == self.cas_enPassant[0] and col - 1 == self.cas_enPassant[1]:
+                            movs.append(Movimiento((fila, col), (fila + mov_num, col - 1), self.tablero, b_enPassant=True))
 
         if col + 1 <= 7:  # Captura por derecha
             if self.tablero.casillas[fila + mov_num][col + 1] is not None:
                 if not piezaClavada or drc_clavada == (mov_num, 1):
                     if self.tablero.casillas[fila + mov_num][col + 1].color == enemigo:
-                        if fila + mov_num == fil_final:
-                            coronacionPeon = True
-                        movs.append(Movimiento((fila, col), (fila + mov_num, col + 1), self.tablero,
-                                               coronacionPeon=coronacionPeon))
-                    elif (fila + mov_num, col + 1) == self.enPassant:
-                        movs.append(Movimiento((fila, col), (fila + mov_num, col + 1), self.tablero,
-                                               enPassantPosible=True))
+                        movs.append(Movimiento((fila, col), (fila + mov_num, col + 1), self.tablero))
+                    if len(self.cas_enPassant) > 0:
+                        if (fila + mov_num) == self.cas_enPassant[0] and col + 1 == self.cas_enPassant[1]:
+                            movs.append(Movimiento((fila, col), (fila + mov_num, col + 1), self.tablero, b_enPassant=True))
 
     def getMovimientosTorre(self, fila, col, movs):
+
         piezaClavada = False
         drc_clavada = ()
         for i in range(len(self.clavadas) - 1, -1, -1):
@@ -289,6 +281,7 @@ class Partida:
                     break
 
     def getMovimientosCaballo(self, fila, col, movs):
+
         piezaClavada = False
         for i in range(len(self.clavadas) - 1, -1, -1):
             if self.clavadas[i][0] == fila and self.clavadas[i][1] == col:
@@ -308,6 +301,7 @@ class Partida:
                         movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), self.tablero))
 
     def getMovimientosAlfil(self, fila, col, movs):
+
         piezaClavada = False
         drc_clavada = ()
         for i in range(len(self.clavadas) - 1, -1, -1):
@@ -335,6 +329,7 @@ class Partida:
                     break  # Movimiento fuera de tablero
 
     def getMovimientosDama(self, fila, col, movs):
+
         self.getMovimientosTorre(fila, col, movs)
         self.getMovimientosAlfil(fila, col, movs)
 
@@ -439,23 +434,25 @@ class Movimiento:
     columnas = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
     columnas_inv = {v: k for k, v in columnas.items()}
 
-    def __init__(self, inicio, fin, tablero, enPassantPosible=False, coronacionPeon=False, enroque=False):
+    def __init__(self, inicio, fin, tablero, b_enPassant=False, enroque=False):
         self.fil_inicio = inicio[0]
         self.col_inicio = inicio[1]
         self.fil_fin = fin[0]
         self.col_fin = fin[1]
         self.piezaMovida = tablero.casillas[self.fil_inicio][self.col_inicio]
         self.piezaCapturada = tablero.casillas[self.fil_fin][self.col_fin]
-        self.ID = self.fil_inicio * 1000 + self.col_inicio * 100 + self.fil_fin * 10 + self.col_fin
-        self.enPassant = enPassantPosible
-        self.coronacionPeon = coronacionPeon
+        # Coronación de peón
+        self.coronacionPeon = self.piezaMovida.tipo == "p" and (self.fil_fin == 0 or self.fil_fin == 7)
+        # Enroque posible o no
         self.enroque = enroque
-        if self.piezaMovida is not None:
-            if self.piezaMovida.tipo == "p" and (self.fil_fin == 0 or self.fil_fin == 7):
-                self.coronacionPeon = True
-        if enPassantPosible:
-            self.piezaCapturada = Pieza("bp" if (self.piezaMovida.color == "w" and self.piezaMovida.tipo == 'p')
-                                        else "wp")
+        # Posible realizar captura en passant
+        self.enPassant = b_enPassant
+        if self.enPassant:
+            if self.piezaMovida.color == "w":
+                self.piezaCapturada = Pieza("bp")
+            else:
+                self.piezaCapturada = Pieza("wp")
+        self.ID = self.fil_inicio * 1000 + self.col_inicio * 100 + self.fil_fin * 10 + self.col_fin
 
     def __eq__(self, other):
         if isinstance(other, Movimiento):
@@ -469,4 +466,5 @@ class Movimiento:
             tp = self.piezaMovida.tipo if self.piezaMovida.tipo != "p" else ""
         c = 'x' if self.piezaCapturada is not None else ""
         fn = self.columnas_inv[self.col_fin] + self.filas_inv[self.fil_fin]
-        return tp + c + fn
+        sv = 'enpassant' if self.enPassant else ''
+        return tp + c + fn + sv
