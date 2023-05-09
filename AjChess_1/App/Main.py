@@ -57,6 +57,7 @@ def main():
                     for i in range(len(movimientos_legales)):
                         if mov == movimientos_legales[i]:
                             partida.Mover(movimientos_legales[i])
+                            print(f'Movimiento realizado: {movimientos_legales[i].getNotacion()}')
                             mov_sw = True
                             CasillaSeleccionada = ()
                             clicks = []
