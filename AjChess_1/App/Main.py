@@ -84,7 +84,7 @@ def main():
         if partida.jaqueMate:
             print('Jaque mate')
             ejecutando = False
-        elif partida.staleMate:
+        elif partida.tablas:
             print('Empate por ahogado')
             ejecutando = False
 

@@ -2,7 +2,7 @@
 determina movimietos legales y realiza los movimientos. """
 
 
-class Partida:  # Resolviendo en passant y enroque, video 8 min 29:36
+class Partida:
     def __init__(self):
         self.tablero = Tablero()
         self.turnoBlanco = True
@@ -16,7 +16,7 @@ class Partida:  # Resolviendo en passant y enroque, video 8 min 29:36
         self.clavadas = []  # Lista de piezas clavadas
         self.jaques = []  # Lista de piezas que dan jaque: (posición, dirección)
         self.jaqueMate = False
-        self.staleMate = False
+        self.tablas = False
         self.cas_enPassant = ()  # Casilla para captura en passant
         self.enroqueBlancoCorto = True
         self.enroqueBlancoLargo = True
@@ -137,10 +137,10 @@ class Partida:  # Resolviendo en passant y enroque, video 8 min 29:36
             if self.enJaque:
                 self.jaqueMate = True
             else:
-                self.staleMate = True
+                self.tablas = True
         else:
             self.jaqueMate = False
-            self.staleMate = False
+            self.tablas = False
         return movs
 
     def Jaques_y_clavadas(self):  # Revisa si el rey está en jaque o si hay piezas clavadas
