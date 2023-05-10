@@ -13,9 +13,9 @@ class Partida:
         self.casillaReyBlanco = (7, 4)
         self.casillaReyNegro = (0, 4)
         self.enJaque = False
-        self.clavadas = []  # Lista de piezas clavadas
+        self.clavadas = []  # Lista de piezas clavadas: (posición, dirección)
         self.jaques = []  # Lista de piezas que dan jaque: (posición, dirección)
-        self.jaqueMate = False
+        self.jaquemate = False
         self.tablas = False
         self.cas_enPassant = ()  # Casilla para captura en passant
         self.enroqueBlancoCorto = True
@@ -135,11 +135,11 @@ class Partida:
 
         if len(movs) == 0:
             if self.enJaque:
-                self.jaqueMate = True
+                self.jaquemate = True
             else:
                 self.tablas = True
         else:
-            self.jaqueMate = False
+            self.jaquemate = False
             self.tablas = False
         return movs
 
@@ -488,7 +488,8 @@ class Movimiento:
         if self.piezaMovida is not None:
             tipo = self.piezaMovida.tipo if self.piezaMovida.tipo != "p" else ""
         cap = 'x' if self.piezaCapturada is not None else ""
-        col_cap = self.columnas_inv[self.col_inicio] if self.piezaCapturada is not None else ""
+        col_cap = self.columnas_inv[self.col_inicio] if \
+            (self.piezaCapturada is not None and self.piezaMovida.tipo != 'Q') else ""
         fn = self.columnas_inv[self.col_fin] + self.filas_inv[self.fil_fin]
         if self.enroque:
             return "0-0" if self.col_fin == 6 else "0-0-0"
