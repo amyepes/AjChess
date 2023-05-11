@@ -11,6 +11,7 @@ fps = 15  # Fps para animaciones
 imgs = {}  # Diccionario de imágenes de las piezas
 colores = [pg.Color("white"), pg.Color("gray")]  # Colores de las casillas
 
+
 # Carga las imágenes de las piezas y las guarda en un diccionario.
 def CargaImagen():
     # Los strings de la lista son los nombres de los archivos .png
@@ -34,6 +35,10 @@ def main():
     CasillaSeleccionada = ()  # Guarda la casilla seleccionada por el usuario
     clicks = []  # Guarda los clicks del usuario
     gameOver = False
+
+    jugador1 = Motor.Jugador()
+    jugador2 = Motor.Jugador(humano=False)
+
     while ejecutando:
         for e in pg.event.get():
             if e.type == pg.QUIT:

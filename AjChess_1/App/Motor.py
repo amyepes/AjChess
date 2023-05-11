@@ -494,3 +494,10 @@ class Movimiento:
         if self.enroque:
             return "0-0" if self.col_fin == 6 else "0-0-0"
         return tipo + col_cap + cap + fn
+
+
+class Jugador:
+    def __init__(self, nombre='', humano=True):
+        self.nombre = nombre
+        self.humano = humano
+
