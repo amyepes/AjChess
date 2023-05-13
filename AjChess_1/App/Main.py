@@ -3,6 +3,7 @@ y ejecutar la interfaz gráfica. """
 
 import pygame as pg
 import Motor
+import MovimientosIA
 
 ancho = altura = 440  # Tamaño de la pantalla
 dimension = 8  # El tablero tiene dimensión 8x8
@@ -36,15 +37,16 @@ def main():
     clicks = []  # Guarda los clicks del usuario
     gameOver = False
 
-    jugador1 = Motor.Jugador()
+    jugador1 = Motor.Jugador(humano=True)
     jugador2 = Motor.Jugador(humano=False)
 
     while ejecutando:
+        turno_humano = (partida.turnoBlanco and jugador1.humano) or (not partida.turnoBlanco and jugador2.humano)
         for e in pg.event.get():
             if e.type == pg.QUIT:
                 ejecutando = False
             elif e.type == pg.MOUSEBUTTONDOWN:  # Evento de click del mouse
-                if not gameOver:
+                if not gameOver and turno_humano:
                     pos = pg.mouse.get_pos()  # Posición del mouse
                     col = pos[0] // dimCasilla
                     fila = pos[1] // dimCasilla
@@ -84,11 +86,23 @@ def main():
                     clicks = []
                     mov_sw = False
                     animar = False
+                    gameOver = False
+
+        if not gameOver and not turno_humano:
+            mov_ia = MovimientosIA.getMovimiento(partida, partida.movimientos_legales())
+            if mov_ia is None:
+                mov_ia = MovimientosIA.getMovimientoAleatorio(partida.movimientos_legales())
+            partida.Mover(mov_ia)
+            print(f'Movimiento realizado: {mov_ia.getNotacion()}')
+            mov_sw = True
+            animar = True
+
         if mov_sw:
             if animar:
                 Animar_Movimiento(pantalla, partida.movimientos[-1], partida.tablero, reloj)
             movimientos_legales = partida.movimientos_legales()
             mov_sw = False
+
         MostrarPartida(pantalla, partida, movimientos_legales, CasillaSeleccionada)
 
         if partida.jaquemate:
