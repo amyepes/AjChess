@@ -37,7 +37,7 @@ def main():
     clicks = []  # Guarda los clicks del usuario
     gameOver = False
 
-    jugador1 = Motor.Jugador(humano=True)
+    jugador1 = Motor.Jugador(humano=False)
     jugador2 = Motor.Jugador(humano=False)
 
     while ejecutando:
@@ -73,12 +73,13 @@ def main():
                             clicks = [CasillaSeleccionada]
             elif e.type == pg.KEYDOWN:  # Evento de tecla presionada
                 if e.key == pg.K_z:  # Tecla z para deshacer el último movimiento
-                    if len(partida.movimientos) != 0:
-                        partida.Deshacer()
-                        CasillaSeleccionada = ()
-                        clicks = []
-                        mov_sw = True
-                        animar = False
+                    partida.Deshacer()
+                    CasillaSeleccionada = ()
+                    clicks = []
+                    mov_sw = True
+                    animar = False
+                    turno_humano = not turno_humano
+                    gameOver = False
                 if e.key == pg.K_r:  # Tecla r para reiniciar la partida
                     partida = Motor.Partida()
                     movimientos_legales = partida.movimientos_legales()
@@ -89,9 +90,9 @@ def main():
                     gameOver = False
 
         if not gameOver and not turno_humano:
-            mov_ia = MovimientosIA.getMovimiento(partida, partida.movimientos_legales())
+            mov_ia = MovimientosIA.getMejorMovimiento(partida, movimientos_legales)
             if mov_ia is None:
-                mov_ia = MovimientosIA.getMovimientoAleatorio(partida.movimientos_legales())
+                mov_ia = MovimientosIA.getMovimientoAleatorio(movimientos_legales)
             partida.Mover(mov_ia)
             print(f'Movimiento realizado: {mov_ia.getNotacion()}')
             mov_sw = True
@@ -108,12 +109,12 @@ def main():
         if partida.jaquemate:
             gameOver = True
             if partida.turnoBlanco:
-                dibujarTexto(pantalla, 'Jaque mate, ganan las negras')
+                dibujarTexto(pantalla, '0-1')
             else:
-                dibujarTexto(pantalla, 'Jaque mate, ganan las blancas')
+                dibujarTexto(pantalla, '1-0')
         elif partida.tablas:
             gameOver = True
-            dibujarTexto(pantalla, 'Tablas')
+            dibujarTexto(pantalla, '0-0')
 
         reloj.tick(fps)
         pg.display.flip()
@@ -178,7 +179,7 @@ def Animar_Movimiento(pantalla, mov, tablero, clock):
 
 
 def dibujarTexto(pantalla, texto):
-    fuente = pg.font.SysFont('Times New Roman', 32, True, False)
+    fuente = pg.font.SysFont('Times New Roman', 40, True, False)
     obj_texto = fuente.render(texto, 0, pg.Color('Black'))
     locacion_texto = pg.Rect(0, 0, ancho, altura).move(ancho / 2 - obj_texto.get_width() / 2, altura
                                                        / 2 - obj_texto.get_height() / 2)

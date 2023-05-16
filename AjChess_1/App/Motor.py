@@ -5,18 +5,18 @@ determina movimietos legales y realiza los movimientos. """
 class Partida:
     def __init__(self):
         self.tablero = Tablero()
-        self.turnoBlanco = True
+        self.turnoBlanco: bool = True
         self.funcionesMovimiento = {"p": self.getMovimientosPeon, "R": self.getMovimientosTorre,
                                     "N": self.getMovimientosCaballo, "B": self.getMovimientosAlfil,
                                     "Q": self.getMovimientosDama, "K": self.getMovimientosRey}
         self.movimientos = []  # Lista de movimientos realizados en la partida
         self.casillaReyBlanco = (7, 4)
         self.casillaReyNegro = (0, 4)
-        self.enJaque = False
+        self.enJaque: bool = False
         self.clavadas = []  # Lista de piezas clavadas: (posición, dirección)
         self.jaques = []  # Lista de piezas que dan jaque: (posición, dirección)
-        self.jaquemate = False
-        self.tablas = False
+        self.jaquemate: bool = False
+        self.tablas: bool = False
         self.cas_enPassant = ()  # Casilla para captura en passant
         self.enroqueBlancoCorto = True
         self.enroqueBlancoLargo = True
@@ -68,6 +68,8 @@ class Partida:
             self.tablero.casillas[mvm.fil_inicio][mvm.col_inicio] = mvm.piezaMovida
             self.tablero.casillas[mvm.fil_fin][mvm.col_fin] = mvm.piezaCapturada
             self.turnoBlanco = not self.turnoBlanco
+            self.jaquemate = False
+            self.tablas = False
             if mvm.piezaMovida.tipo == "K":
                 if mvm.piezaMovida.color == "w":
                     self.casillaReyBlanco = (mvm.fil_inicio, mvm.col_inicio)
@@ -500,4 +502,3 @@ class Jugador:
     def __init__(self, nombre='', humano=True):
         self.nombre = nombre
         self.humano = humano
-
