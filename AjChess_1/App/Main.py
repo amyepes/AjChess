@@ -110,7 +110,7 @@ def main():
                 print("Calculando...")
                 cola = Queue()
                 procesoAI = Process(target=MovimientosIA.getMejorMovimiento, args=(partida, movimientos_legales, cola))
-                procesoAI.start()  # Se invoca la función de obtenere un movimiento en un proceso aparte
+                procesoAI.start()  # Se invoca la función de obtener un movimiento en un proceso aparte
 
             if not procesoAI.is_alive():
                 mov_ia = cola.get()
