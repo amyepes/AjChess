@@ -2,6 +2,64 @@
 import random
 
 valor_piezas = {'K': 0, 'Q': 10, 'R': 5, 'B': 3, 'N': 3, 'p': 1}
+
+valor_caballo = [[1 for _ in range(8)],
+                 [1, 2, 2, 2, 2, 2, 2, 1],
+                 [1, 2, 3, 3, 3, 3, 2, 1],
+                 [1, 2, 3, 4, 4, 3, 2, 1],
+                 [1, 2, 3, 4, 4, 3, 2, 1],
+                 [1, 2, 3, 3, 3, 3, 2, 1],
+                 [1, 2, 2, 2, 2, 2, 2, 1],
+                 [1 for _ in range(8)]]
+
+valor_alfil = [[4, 3, 2, 1, 1, 2, 3, 4],
+               [3, 4, 3, 2, 2, 3, 4, 3],
+               [2, 3, 4, 3, 3, 4, 3, 2],
+               [1, 2, 3, 4, 4, 3, 2, 1],
+               [1, 2, 3, 4, 4, 3, 2, 1],
+               [2, 3, 4, 3, 3, 4, 3, 2],
+               [3, 4, 3, 2, 2, 3, 4, 3],
+               [4, 3, 2, 1, 1, 2, 3, 4]]
+
+valor_reina = [[1, 1, 1, 3, 1, 1, 1, 1],
+               [1, 2, 3, 3, 3, 1, 1, 1],
+               [1, 4, 3, 3, 3, 4, 2, 1],
+               [1, 2, 3, 3, 3, 2, 2, 1],
+               [1, 2, 3, 3, 3, 2, 2, 1],
+               [1, 4, 3, 3, 3, 4, 2, 1],
+               [1, 1, 2, 3, 3, 1, 1, 1],
+               [1, 1, 1, 3, 1, 1, 1, 1]]
+
+valor_torre = [[4, 3, 4, 4, 4, 4, 3, 4],
+               [4, 4, 4, 4, 4, 4, 4, 4],
+               [1, 1, 2, 3, 3, 2, 1, 1],
+               [1, 2, 3, 4, 4, 3, 2, 1],
+               [1, 2, 3, 4, 4, 3, 2, 1],
+               [1, 1, 2, 3, 3, 2, 1, 1],
+               [4, 4, 4, 4, 4, 4, 4, 4],
+               [4, 3, 4, 4, 4, 4, 3, 4]]
+
+valor_peonblanco = [[8 for _ in range(8)],
+                    [8 for _ in range(8)],
+                    [5, 6, 6, 7, 7, 6, 6, 5],
+                    [2, 3, 3, 5, 5, 3, 3, 2],
+                    [1, 2, 3, 4, 4, 3, 2, 1],
+                    [1, 1, 2, 3, 3, 2, 1, 1],
+                    [1 if 2 < i < 5 else 0 for i in range(8)],
+                    [0 for _ in range(8)]]
+
+valor_peonnegro = [[0 for _ in range(8)],
+                   [1 if 2 < i < 5 else 0 for i in range(8)],
+                   [1, 1, 2, 3, 3, 2, 1, 1],
+                   [1, 2, 3, 4, 4, 3, 2, 1],
+                   [2, 3, 3, 5, 5, 3, 3, 2],
+                   [5, 6, 6, 7, 7, 6, 6, 5],
+                   [8 for _ in range(8)],
+                   [8 for _ in range(8)]]
+
+valor_piezas_pos = {'N': valor_caballo, 'B': valor_alfil, 'Q': valor_reina, 'R': valor_torre,
+                    'bp': valor_peonnegro, 'wp': valor_peonblanco}
+
 JAQUEMATE = 1000
 TABLAS = 0
 PROFUNDIDAD = 3  # Profundidad del árbol de búsqueda, no sobrepasarse de 4
@@ -45,13 +103,13 @@ def getMovimientoNotMinMax(partida, movs_legales):
 
 
 # Método auxiliar para el algoritmo MinMax
-def getMejorMovimiento(partida, movs_legales):
+def getMejorMovimiento(partida, movs_legales, cola):
     global mov_siguiente
     mov_siguiente = None
     random.shuffle(movs_legales)
     getMovimientoNegaMaxAlfaBeta(partida, movs_legales,
                                  PROFUNDIDAD, -JAQUEMATE, JAQUEMATE, 1 if partida.turnoBlanco else -1)
-    return mov_siguiente
+    cola.put(mov_siguiente)
 
 
 def getMovimientoMinmax(partida, movs_legales, profundidad, turnoblanco):
@@ -155,10 +213,21 @@ def ValorTablero(partida):
 
     puntaje = 0
     for f in range(len(partida.tablero.casillas)):
-        for c in range(len(partida.tablero.casillas[0])):
-            if partida.tablero.casillas[f][c] is not None:
-                if partida.tablero.casillas[f][c].color == 'w':
-                    puntaje += valor_piezas[partida.tablero.casillas[f][c].tipo]
-                elif partida.tablero.casillas[f][c].color == 'b':
-                    puntaje -= valor_piezas[partida.tablero.casillas[f][c].tipo]
+        for c in range(len(partida.tablero.casillas[f])):
+            p = partida.tablero.casillas[f][c]
+
+            if p is not None:
+                puntaje_p_pos = 0
+
+                if p.tipo != 'K':  # No se toma en cuenta la posición del rey
+                    if p.tipo == 'p':
+                        puntaje_p_pos = valor_piezas_pos[p.nombre][f][c]
+                    else:
+                        puntaje_p_pos = valor_piezas_pos[p.tipo][f][c]
+
+                if p.color == 'w':
+                    puntaje += valor_piezas[p.tipo] + puntaje_p_pos * .2
+                elif p.color == 'b':
+                    puntaje -= valor_piezas[p.tipo] + puntaje_p_pos * .2
+
     return puntaje

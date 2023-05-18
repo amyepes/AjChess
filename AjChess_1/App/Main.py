@@ -4,6 +4,7 @@ y ejecutar la interfaz gráfica. """
 import pygame as pg
 import Motor
 import MovimientosIA
+from multiprocessing import Process, Queue
 
 ANCHO_T = ALTURA_T = 440  # Tamaño del tablero
 ANCHO_MOV = 240  # Ancho de la barra de movimientos
@@ -39,8 +40,11 @@ def main():
     CasillaSeleccionada = ()  # Guarda la casilla seleccionada por el usuario
     clicks = []  # Guarda los clicks del usuario
     gameOver = False
+    ejecutandoAI = False
+    procesoAI = None
+    mov_deshecho = False
 
-    jugador1 = Motor.Jugador(humano=False)
+    jugador1 = Motor.Jugador(humano=True)
     jugador2 = Motor.Jugador(humano=False)
 
     while ejecutando:
@@ -49,7 +53,7 @@ def main():
             if e.type == pg.QUIT:
                 ejecutando = False
             elif e.type == pg.MOUSEBUTTONDOWN:  # Evento de click del mouse
-                if not gameOver and turno_humano:
+                if not gameOver:
                     pos = pg.mouse.get_pos()  # Posición del mouse
                     col = pos[0] // TAM_CASILLA
                     fila = pos[1] // TAM_CASILLA
@@ -62,7 +66,7 @@ def main():
                     else:
                         CasillaSeleccionada = (fila, col)
                         clicks.append(CasillaSeleccionada)  # Se guardan los dos clicks del usuario
-                    if len(clicks) == 2 and partida.tablero.casillas[clicks[0][0]][clicks[0][1]] is not None:
+                    if len(clicks) == 2 and turno_humano:  # partida.tablero.casillas[clicks[0][0]][clicks[0][1]]
                         mov = Motor.Movimiento(clicks[0], clicks[1], partida.tablero)
                         for i in range(len(movimientos_legales)):
                             if mov == movimientos_legales[i]:
@@ -83,6 +87,10 @@ def main():
                     if not jugador1.humano or not jugador2.humano:
                         turno_humano = not turno_humano
                     gameOver = False
+                    if ejecutandoAI:
+                        procesoAI.terminate()
+                        ejecutandoAI = False
+                    mov_deshecho = True
                 if e.key == pg.K_r:  # Tecla r para reiniciar la partida
                     partida = Motor.Partida()
                     movimientos_legales = partida.movimientos_legales()
@@ -91,20 +99,35 @@ def main():
                     mov_sw = False
                     animar = False
                     gameOver = False
+                    if ejecutandoAI:
+                        procesoAI.terminate()
+                        ejecutandoAI = False
+                    mov_deshecho = True
 
-        if not gameOver and not turno_humano:
-            mov_ia = MovimientosIA.getMejorMovimiento(partida, movimientos_legales)
-            if mov_ia is None:
-                mov_ia = MovimientosIA.getMovimientoAleatorio(movimientos_legales)
-            partida.Mover(mov_ia)
-            mov_sw = True
-            animar = True
+        if not gameOver and not turno_humano and not mov_deshecho:
+            if not ejecutandoAI:
+                ejecutandoAI = True
+                print("Calculando...")
+                cola = Queue()
+                procesoAI = Process(target=MovimientosIA.getMejorMovimiento, args=(partida, movimientos_legales, cola))
+                procesoAI.start()  # Se invoca la función de obtenere un movimiento en un proceso aparte
+
+            if not procesoAI.is_alive():
+                mov_ia = cola.get()
+                print("Movimiento calculado")
+                if mov_ia is None:
+                    mov_ia = MovimientosIA.getMovimientoAleatorio(movimientos_legales)
+                partida.Mover(mov_ia)
+                mov_sw = True
+                animar = True
+                ejecutandoAI = False
 
         if mov_sw:
             if animar:
                 Animar_Movimiento(pantalla, partida.movimientos[-1], partida.tablero, reloj)
             movimientos_legales = partida.movimientos_legales()
             mov_sw = False
+            mov_deshecho = False
 
         MostrarPartida(pantalla, partida, movimientos_legales, CasillaSeleccionada, fuente_movimientos)
 
@@ -223,3 +246,20 @@ def dibujarTextoFinal(pantalla, texto):
 
 if __name__ == "__main__":
     main()
+
+# UI improvements:
+# -Menu to select AI/Human
+# -Flip board options (display from black perspective)
+# -Change color of board/pieces - different piece skins
+# -Mouse click/drag for pieces
+#
+# Engine improvements:
+# -Add 50 move draw and 3 move repeating draw rule
+# -Move ordering - look at checks, captures and threats first, prioritize castling/king safety, look at pawn moves
+#   last (this will improve alpha-beta pruning). Also start with moves that previously
+#   scored higher (will also improve pruning).
+# -Calculate both players moves given a position
+# -Change move calculation to make it more efficient. Instead of recalculating all moves, start with moves from previous board and change based on last move made
+# -Use a numpy array instead of 2d list of strings or store the board differently (maybe with bit boards: https://www.chessprogramming.org/Bitb...)
+# -Hash board positions already visited to improve computation time for transpositions. (https://en.wikipedia.org/wiki/Zobrist...)
+# -If move is a capture move, even at max depth, continue evaluating until no captures remain (https://www.chessprogramming.org/Quie...)
