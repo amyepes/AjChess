@@ -44,7 +44,7 @@ def main():
     procesoAI = None
     mov_deshecho = False
 
-    jugador1 = Motor.Jugador(humano=True)
+    jugador1 = Motor.Jugador(humano=False)
     jugador2 = Motor.Jugador(humano=False)
 
     while ejecutando:
@@ -259,7 +259,8 @@ if __name__ == "__main__":
 #   last (this will improve alpha-beta pruning). Also start with moves that previously
 #   scored higher (will also improve pruning).
 # -Calculate both players moves given a position
-# -Change move calculation to make it more efficient. Instead of recalculating all moves, start with moves from previous board and change based on last move made
-# -Use a numpy array instead of 2d list of strings or store the board differently (maybe with bit boards: https://www.chessprogramming.org/Bitb...)
-# -Hash board positions already visited to improve computation time for transpositions. (https://en.wikipedia.org/wiki/Zobrist...)
-# -If move is a capture move, even at max depth, continue evaluating until no captures remain (https://www.chessprogramming.org/Quie...)
+# -Change move calculation to make it more efficient. Instead of recalculating all moves, start with moves
+#   from previous board and change based on last move made
+# -Use a numpy array instead of 2d list of strings or store the board differently
+# -Hash board positions already visited to improve computation time for transpositions.
+# -If move is a capture move, even at max depth, continue evaluating until no captures remain

@@ -6,9 +6,12 @@ class Partida:
     def __init__(self):
         self.tablero = Tablero()
         self.turnoBlanco: bool = True
-        self.funcionesMovimiento = {"p": self.getMovimientosPeon, "R": self.getMovimientosTorre,
-                                    "N": self.getMovimientosCaballo, "B": self.getMovimientosAlfil,
-                                    "Q": self.getMovimientosDama, "K": self.getMovimientosRey}
+        self.funcionesMovimiento = {"p": GeneradorMovimientos.getMovimientosPeon,
+                                    "R": GeneradorMovimientos.getMovimientosTorre,
+                                    "N": GeneradorMovimientos.getMovimientosCaballo,
+                                    "B": GeneradorMovimientos.getMovimientosAlfil,
+                                    "Q": GeneradorMovimientos.getMovimientosDama,
+                                    "K": GeneradorMovimientos.getMovimientosRey}
         self.movimientos: list = []  # Lista de movimientos realizados en la partida
         self.casillaReyBlanco: tuple = (7, 4)
         self.casillaReyNegro: tuple = (0, 4)
@@ -129,7 +132,7 @@ class Partida:
                         if not (movs[i].fil_fin, movs[i].col_fin) in casillasLegales:
                             movs.remove(movs[i])
             else:
-                self.getMovimientosRey(rey[0], rey[1], movs)
+                GeneradorMovimientos.getMovimientosRey(self, rey[0], rey[1], movs)
         else:
             movs = self.movimientos_posibles()
             if self.turnoBlanco:
@@ -213,216 +216,8 @@ class Partida:
                 pieza = self.tablero.casillas[fila][col]
                 if pieza is not None:
                     if (pieza.color == "w" and self.turnoBlanco) or (pieza.color == "b" and not self.turnoBlanco):
-                        self.funcionesMovimiento[pieza.tipo](fila, col, movs)  # Llama a la función correspondiente
+                        self.funcionesMovimiento[pieza.tipo](self, fila, col, movs)  # Llama a la función adecuada
         return movs
-
-    def getMovimientosPeon(self, fila, col, movs):
-
-        piezaClavada = False
-        drc_clavada = ()
-        for i in range(len(self.clavadas) - 1, -1, -1):
-            if self.clavadas[i][0] == fila and self.clavadas[i][1] == col:
-                piezaClavada = True
-                drc_clavada = (self.clavadas[i][2], self.clavadas[i][3])
-                self.clavadas.remove(self.clavadas[i])
-                break
-
-        if self.turnoBlanco:
-            mov_num = -1
-            fil_inicio = 6
-            enemigo = "b"
-            fil_rey, col_rey = self.casillaReyBlanco
-        else:
-            mov_num = 1
-            fil_inicio = 1
-            enemigo = "w"
-            fil_rey, col_rey = self.casillaReyNegro
-
-        if self.tablero.casillas[fila + mov_num][col] is None:  # Movimiento de una casilla
-            if not piezaClavada or drc_clavada == (mov_num, 0):
-                movs.append(Movimiento((fila, col), (fila + mov_num, col), self.tablero))
-                if fila == fil_inicio and self.tablero.casillas[fila + 2 * mov_num][col] is None:
-                    movs.append(Movimiento((fila, col), (fila + 2 * mov_num, col), self.tablero))
-
-        if col - 1 >= 0:  # Captura por izquierda
-            if self.tablero.casillas[fila + mov_num][col - 1] is not None:
-                if not piezaClavada or drc_clavada == (mov_num, -1):
-                    if self.tablero.casillas[fila + mov_num][col - 1].color == enemigo:
-                        movs.append(Movimiento((fila, col), (fila + mov_num, col - 1), self.tablero))
-
-            if len(self.cas_enPassant) > 0 and (not piezaClavada or drc_clavada == (mov_num, -1)):
-                if (fila + mov_num) == self.cas_enPassant[0] and col - 1 == self.cas_enPassant[1]:
-                    piezaAtacante = piezaDefensora = False
-                    if fil_rey == fila:
-                        if col_rey < col:
-                            rangointerior = range(col_rey + 1, col - 1)
-                            rangoexterior = range(col + 1, 8)
-                        else:
-                            rangointerior = range(col_rey - 1, col, -1)
-                            rangoexterior = range(col - 2, -1, -1)
-                        for i in rangointerior:
-                            if self.tablero.casillas[fila][i] is not None:
-                                piezaDefensora = True
-                                break
-                        for i in rangoexterior:
-                            p = self.tablero.casillas[fila][i]
-                            if p is not None:
-                                if p.color == enemigo and (p.tipo == "R" or p.tipo == "Q"):
-                                    piezaAtacante = True
-                                    break
-                                else:
-                                    piezaDefensora = True
-                                    break
-                    if not piezaAtacante or piezaDefensora:
-                        movs.append(Movimiento((fila, col), (fila + mov_num, col - 1), self.tablero, b_enpassant=True))
-
-        if col + 1 <= 7:  # Captura por derecha
-            if self.tablero.casillas[fila + mov_num][col + 1] is not None:
-                if not piezaClavada or drc_clavada == (mov_num, 1):
-                    if self.tablero.casillas[fila + mov_num][col + 1].color == enemigo:
-                        movs.append(Movimiento((fila, col), (fila + mov_num, col + 1), self.tablero))
-
-            if len(self.cas_enPassant) > 0 and (not piezaClavada or drc_clavada == (mov_num, -1)):
-                if (fila + mov_num) == self.cas_enPassant[0] and col + 1 == self.cas_enPassant[1]:
-                    piezaAtacante = piezaDefensora = False
-                    if fil_rey == fila:
-                        if col_rey < col:
-                            rangointerior = range(col_rey + 1, col)
-                            rangoexterior = range(col + 2, 8)
-                        else:
-                            rangointerior = range(col_rey - 1, col + 1, -1)
-                            rangoexterior = range(col - 1, -1, -1)
-                        for i in rangointerior:
-                            if self.tablero.casillas[fila][i] is not None:
-                                piezaDefensora = True
-                                break
-                        for i in rangoexterior:
-                            p = self.tablero.casillas[fila][i]
-                            if p is not None:
-                                if p.color == enemigo and (p.tipo == "R" or p.tipo == "Q"):
-                                    piezaAtacante = True
-                                    break
-                                else:
-                                    piezaDefensora = True
-                                    break
-                    if not piezaAtacante or piezaDefensora:
-                        movs.append(Movimiento((fila, col), (fila + mov_num, col + 1), self.tablero, b_enpassant=True))
-
-    def getMovimientosTorre(self, fila, col, movs):
-
-        piezaClavada = False
-        drc_clavada = ()
-        for i in range(len(self.clavadas) - 1, -1, -1):
-            if self.clavadas[i][0] == fila and self.clavadas[i][1] == col:
-                piezaClavada = True
-                drc_clavada = (self.clavadas[i][2], self.clavadas[i][3])
-                if self.tablero.casillas[fila][col].tipo != "Q":
-                    self.clavadas.remove(self.clavadas[i])
-                break
-        direcciones = [(-1, 0), (0, -1), (1, 0), (0, 1)]  # Arriba, izquierda, abajo, derecha
-        enemigo = "b" if self.turnoBlanco else "w"
-        for d in direcciones:
-            for i in range(1, 8):
-                nueva_fila = fila + d[0] * i
-                nueva_col = col + d[1] * i
-                if (0 <= nueva_fila < 8) and (0 <= nueva_col < 8):
-                    if not piezaClavada or drc_clavada == d or drc_clavada == (-d[0], -d[1]):
-                        if self.tablero.casillas[nueva_fila][nueva_col] is None:
-                            movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), self.tablero))
-                        elif self.tablero.casillas[nueva_fila][nueva_col].color == enemigo:
-                            movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), self.tablero))
-                            break
-                        else:
-                            break
-                else:
-                    break
-
-    def getMovimientosCaballo(self, fila, col, movs):
-
-        piezaClavada = False
-        for i in range(len(self.clavadas) - 1, -1, -1):
-            if self.clavadas[i][0] == fila and self.clavadas[i][1] == col:
-                piezaClavada = True
-                self.clavadas.remove(self.clavadas[i])
-                break
-        direcciones = [(-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1)]
-        aliado = "w" if self.turnoBlanco else "b"
-        for d in direcciones:
-            nueva_fila = fila + d[0]
-            nueva_col = col + d[1]
-            if 0 <= nueva_fila <= 7 and 0 <= nueva_col <= 7:
-                if not piezaClavada:
-                    if self.tablero.casillas[nueva_fila][nueva_col] is None:
-                        movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), self.tablero))
-                    elif self.tablero.casillas[nueva_fila][nueva_col].color != aliado:
-                        movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), self.tablero))
-
-    def getMovimientosAlfil(self, fila, col, movs):
-
-        piezaClavada = False
-        drc_clavada = ()
-        for i in range(len(self.clavadas) - 1, -1, -1):
-            if self.clavadas[i][0] == fila and self.clavadas[i][1] == col:
-                piezaClavada = True
-                drc_clavada = (self.clavadas[i][2], self.clavadas[i][3])
-                self.clavadas.remove(self.clavadas[i])
-                break
-        direcciones = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
-        enemigo = "b" if self.turnoBlanco else "w"
-        for d in direcciones:
-            for i in range(1, 8):
-                nueva_fila = fila + d[0] * i
-                nueva_col = col + d[1] * i
-                if 0 <= nueva_fila <= 7 and 0 <= nueva_col <= 7:
-                    if not piezaClavada or drc_clavada == d or drc_clavada == (-d[0], -d[1]):
-                        if self.tablero.casillas[nueva_fila][nueva_col] is None:
-                            movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), self.tablero))
-                        elif self.tablero.casillas[nueva_fila][nueva_col].color == enemigo:
-                            movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), self.tablero))
-                            break
-                        else:
-                            break  # Si hay una pieza aliada, no se puede seguir moviendo en esa dirección
-                else:
-                    break  # Movimiento fuera de tablero
-
-    def getMovimientosDama(self, fila, col, movs):
-
-        self.getMovimientosTorre(fila, col, movs)
-        self.getMovimientosAlfil(fila, col, movs)
-
-    def getMovimientosRey(self, fila, col, movs):
-        mov_fil = (-1, -1, -1, 0, 0, 1, 1, 1)
-        mov_col = (-1, 0, 1, -1, 1, -1, 0, 1)
-        aliado = "w" if self.turnoBlanco else "b"
-        for i in range(8):
-            nueva_fila = fila + mov_fil[i]
-            nueva_col = col + mov_col[i]
-            if 0 <= nueva_fila <= 7 and 0 <= nueva_col <= 7:
-                pz = self.tablero.casillas[nueva_fila][nueva_col]
-                if pz is None:
-                    if aliado == "w":
-                        self.casillaReyBlanco = (nueva_fila, nueva_col)
-                    else:
-                        self.casillaReyNegro = (nueva_fila, nueva_col)
-                    enJaque, clavadas, jaques = self.Jaques_y_clavadas()
-                    if not enJaque:
-                        movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), self.tablero))
-                    if aliado == "w":
-                        self.casillaReyBlanco = (fila, col)
-                    else:
-                        self.casillaReyNegro = (fila, col)
-                elif pz.color != aliado:
-                    if aliado == "w":
-                        self.casillaReyBlanco = (nueva_fila, nueva_col)
-                    else:
-                        self.casillaReyNegro = (nueva_fila, nueva_col)
-                    enJaque, clavadas, jaques = self.Jaques_y_clavadas()
-                    if not enJaque:
-                        movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), self.tablero))
-                    if aliado == "w":
-                        self.casillaReyBlanco = (fila, col)
-                    else:
-                        self.casillaReyNegro = (fila, col)
 
     def Casilla_Atacada(self, fila, col) -> bool:
         self.turnoBlanco = not self.turnoBlanco
@@ -489,7 +284,212 @@ class Partida:
 
 
 class GeneradorMovimientos:
-    pass
+    def getMovimientosPeon(partida, fila, col, movs):
+        piezaClavada = False
+        drc_clavada = ()
+        for i in range(len(partida.clavadas) - 1, -1, -1):
+            if partida.clavadas[i][0] == fila and partida.clavadas[i][1] == col:
+                piezaClavada = True
+                drc_clavada = (partida.clavadas[i][2], partida.clavadas[i][3])
+                partida.clavadas.remove(partida.clavadas[i])
+                break
+
+        if partida.turnoBlanco:
+            mov_num = -1
+            fil_inicio = 6
+            enemigo = "b"
+            fil_rey, col_rey = partida.casillaReyBlanco
+        else:
+            mov_num = 1
+            fil_inicio = 1
+            enemigo = "w"
+            fil_rey, col_rey = partida.casillaReyNegro
+
+        if partida.tablero.casillas[fila + mov_num][col] is None:  # Movimiento de una casilla
+            if not piezaClavada or drc_clavada == (mov_num, 0):
+                movs.append(Movimiento((fila, col), (fila + mov_num, col), partida.tablero))
+                if fila == fil_inicio and partida.tablero.casillas[fila + 2 * mov_num][col] is None:
+                    movs.append(Movimiento((fila, col), (fila + 2 * mov_num, col), partida.tablero))
+
+        if col - 1 >= 0:  # Captura por izquierda
+            if partida.tablero.casillas[fila + mov_num][col - 1] is not None:
+                if not piezaClavada or drc_clavada == (mov_num, -1):
+                    if partida.tablero.casillas[fila + mov_num][col - 1].color == enemigo:
+                        movs.append(Movimiento((fila, col), (fila + mov_num, col - 1), partida.tablero))
+
+            if len(partida.cas_enPassant) > 0 and (not piezaClavada or drc_clavada == (mov_num, -1)):
+                if (fila + mov_num) == partida.cas_enPassant[0] and col - 1 == partida.cas_enPassant[1]:
+                    piezaAtacante = piezaDefensora = False
+                    if fil_rey == fila:
+                        if col_rey < col:
+                            rangointerior = range(col_rey + 1, col - 1)
+                            rangoexterior = range(col + 1, 8)
+                        else:
+                            rangointerior = range(col_rey - 1, col, -1)
+                            rangoexterior = range(col - 2, -1, -1)
+                        for i in rangointerior:
+                            if partida.tablero.casillas[fila][i] is not None:
+                                piezaDefensora = True
+                                break
+                        for i in rangoexterior:
+                            p = partida.tablero.casillas[fila][i]
+                            if p is not None:
+                                if p.color == enemigo and (p.tipo == "R" or p.tipo == "Q"):
+                                    piezaAtacante = True
+                                    break
+                                else:
+                                    piezaDefensora = True
+                                    break
+                    if not piezaAtacante or piezaDefensora:
+                        movs.append(Movimiento((fila, col), (fila + mov_num, col - 1),
+                                               partida.tablero, b_enpassant=True))
+
+        if col + 1 <= 7:  # Captura por derecha
+            if partida.tablero.casillas[fila + mov_num][col + 1] is not None:
+                if not piezaClavada or drc_clavada == (mov_num, 1):
+                    if partida.tablero.casillas[fila + mov_num][col + 1].color == enemigo:
+                        movs.append(Movimiento((fila, col), (fila + mov_num, col + 1), partida.tablero))
+
+            if len(partida.cas_enPassant) > 0 and (not piezaClavada or drc_clavada == (mov_num, -1)):
+                if (fila + mov_num) == partida.cas_enPassant[0] and col + 1 == partida.cas_enPassant[1]:
+                    piezaAtacante = piezaDefensora = False
+                    if fil_rey == fila:
+                        if col_rey < col:
+                            rangointerior = range(col_rey + 1, col)
+                            rangoexterior = range(col + 2, 8)
+                        else:
+                            rangointerior = range(col_rey - 1, col + 1, -1)
+                            rangoexterior = range(col - 1, -1, -1)
+                        for i in rangointerior:
+                            if partida.tablero.casillas[fila][i] is not None:
+                                piezaDefensora = True
+                                break
+                        for i in rangoexterior:
+                            p = partida.tablero.casillas[fila][i]
+                            if p is not None:
+                                if p.color == enemigo and (p.tipo == "R" or p.tipo == "Q"):
+                                    piezaAtacante = True
+                                    break
+                                else:
+                                    piezaDefensora = True
+                                    break
+                    if not piezaAtacante or piezaDefensora:
+                        movs.append(Movimiento((fila, col), (fila + mov_num, col + 1),
+                                               partida.tablero, b_enpassant=True))
+
+    def getMovimientosTorre(partida, fila, col, movs):
+        piezaClavada = False
+        drc_clavada = ()
+        for i in range(len(partida.clavadas) - 1, -1, -1):
+            if partida.clavadas[i][0] == fila and partida.clavadas[i][1] == col:
+                piezaClavada = True
+                drc_clavada = (partida.clavadas[i][2], partida.clavadas[i][3])
+                if partida.tablero.casillas[fila][col].tipo != "Q":
+                    partida.clavadas.remove(partida.clavadas[i])
+                break
+        direcciones = [(-1, 0), (0, -1), (1, 0), (0, 1)]  # Arriba, izquierda, abajo, derecha
+        enemigo = "b" if partida.turnoBlanco else "w"
+        for d in direcciones:
+            for i in range(1, 8):
+                nueva_fila = fila + d[0] * i
+                nueva_col = col + d[1] * i
+                if (0 <= nueva_fila < 8) and (0 <= nueva_col < 8):
+                    if not piezaClavada or drc_clavada == d or drc_clavada == (-d[0], -d[1]):
+                        if partida.tablero.casillas[nueva_fila][nueva_col] is None:
+                            movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), partida.tablero))
+                        elif partida.tablero.casillas[nueva_fila][nueva_col].color == enemigo:
+                            movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), partida.tablero))
+                            break
+                        else:
+                            break
+                else:
+                    break
+
+    def getMovimientosCaballo(partida, fila, col, movs):
+        piezaClavada = False
+        for i in range(len(partida.clavadas) - 1, -1, -1):
+            if partida.clavadas[i][0] == fila and partida.clavadas[i][1] == col:
+                piezaClavada = True
+                partida.clavadas.remove(partida.clavadas[i])
+                break
+        direcciones = [(-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1)]
+        aliado = "w" if partida.turnoBlanco else "b"
+        for d in direcciones:
+            nueva_fila = fila + d[0]
+            nueva_col = col + d[1]
+            if 0 <= nueva_fila <= 7 and 0 <= nueva_col <= 7:
+                if not piezaClavada:
+                    if partida.tablero.casillas[nueva_fila][nueva_col] is None:
+                        movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), partida.tablero))
+                    elif partida.tablero.casillas[nueva_fila][nueva_col].color != aliado:
+                        movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), partida.tablero))
+
+    def getMovimientosAlfil(partida, fila, col, movs):
+
+        piezaClavada = False
+        drc_clavada = ()
+        for i in range(len(partida.clavadas) - 1, -1, -1):
+            if partida.clavadas[i][0] == fila and partida.clavadas[i][1] == col:
+                piezaClavada = True
+                drc_clavada = (partida.clavadas[i][2], partida.clavadas[i][3])
+                partida.clavadas.remove(partida.clavadas[i])
+                break
+        direcciones = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+        enemigo = "b" if partida.turnoBlanco else "w"
+        for d in direcciones:
+            for i in range(1, 8):
+                nueva_fila = fila + d[0] * i
+                nueva_col = col + d[1] * i
+                if 0 <= nueva_fila <= 7 and 0 <= nueva_col <= 7:
+                    if not piezaClavada or drc_clavada == d or drc_clavada == (-d[0], -d[1]):
+                        if partida.tablero.casillas[nueva_fila][nueva_col] is None:
+                            movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), partida.tablero))
+                        elif partida.tablero.casillas[nueva_fila][nueva_col].color == enemigo:
+                            movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), partida.tablero))
+                            break
+                        else:
+                            break  # Si hay una pieza aliada, no se puede seguir moviendo en esa dirección
+                else:
+                    break  # Movimiento fuera de tablero
+
+    def getMovimientosDama(partida, fila, col, movs):
+        GeneradorMovimientos.getMovimientosTorre(partida, fila, col, movs)
+        GeneradorMovimientos.getMovimientosAlfil(partida, fila, col, movs)
+
+    # noinspection PyAttributeOutsideInit
+    def getMovimientosRey(partida, fila, col, movs):
+        mov_fil = (-1, -1, -1, 0, 0, 1, 1, 1)
+        mov_col = (-1, 0, 1, -1, 1, -1, 0, 1)
+        aliado = "w" if partida.turnoBlanco else "b"
+        for i in range(8):
+            nueva_fila = fila + mov_fil[i]
+            nueva_col = col + mov_col[i]
+            if 0 <= nueva_fila <= 7 and 0 <= nueva_col <= 7:
+                pz = partida.tablero.casillas[nueva_fila][nueva_col]
+                if pz is None:
+                    if aliado == "w":
+                        partida.casillaReyBlanco = (nueva_fila, nueva_col)
+                    else:
+                        partida.casillaReyNegro = (nueva_fila, nueva_col)
+                    enJaque, clavadas, jaques = partida.Jaques_y_clavadas()
+                    if not enJaque:
+                        movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), partida.tablero))
+                    if aliado == "w":
+                        partida.casillaReyBlanco = (fila, col)
+                    else:
+                        partida.casillaReyNegro = (fila, col)
+                elif pz.color != aliado:
+                    if aliado == "w":
+                        partida.casillaReyBlanco = (nueva_fila, nueva_col)
+                    else:
+                        partida.casillaReyNegro = (nueva_fila, nueva_col)
+                    enJaque, clavadas, jaques = partida.Jaques_y_clavadas()
+                    if not enJaque:
+                        movs.append(Movimiento((fila, col), (nueva_fila, nueva_col), partida.tablero))
+                    if aliado == "w":
+                        partida.casillaReyBlanco = (fila, col)
+                    else:
+                        partida.casillaReyNegro = (fila, col)
 
 
 class Tablero:

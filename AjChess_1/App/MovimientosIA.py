@@ -70,38 +70,6 @@ def getMovimientoAleatorio(movs_legales):
     return movs_legales[random.randint(0, len(movs_legales) - 1)]
 
 
-def getMovimientoNotMinMax(partida, movs_legales):
-    signo = 1 if partida.turnoBlanco else -1
-    puntaje_minmax_enemigo = JAQUEMATE
-    mejor_mov_jugador = None
-    random.shuffle(movs_legales)
-    for mov_jugador in movs_legales:
-        partida.Mover(mov_jugador)
-        movs_enemigo = partida.movimientos_legales()
-        if partida.TABLAS:
-            puntaje_max_enemigo = TABLAS
-        elif partida.jaquemate:
-            puntaje_max_enemigo = -JAQUEMATE
-        else:
-            puntaje_max_enemigo = -JAQUEMATE
-            for mov_enemigo in movs_enemigo:
-                partida.Mover(mov_enemigo)
-                if partida.jaquemate:
-                    puntaje = JAQUEMATE
-                elif partida.TABLAS:
-                    puntaje = TABLAS
-                else:
-                    puntaje = ValorMaterial(partida.tablero) * -signo
-                if puntaje > puntaje_max_enemigo:
-                    puntaje_max_enemigo = puntaje
-                partida.Deshacer()
-        if puntaje_max_enemigo < puntaje_minmax_enemigo:
-            puntaje_minmax_enemigo = puntaje_max_enemigo
-            mejor_mov_jugador = mov_jugador
-        partida.Deshacer()
-    return mejor_mov_jugador
-
-
 # Método auxiliar para el algoritmo MinMax
 def getMejorMovimiento(partida, movs_legales, cola):
     global mov_siguiente
