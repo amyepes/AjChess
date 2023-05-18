@@ -1,5 +1,5 @@
 """ Guarda la información del estado actual de la partida,
-determina movimietos legales y realiza los movimientos. """
+determina movimientos legales y realiza los movimientos. """
 
 
 class Partida:
@@ -18,6 +18,7 @@ class Partida:
         self.jaquemate: bool = False
         self.tablas: bool = False
         self.cas_enPassant = ()  # Casilla para captura en passant
+        self.registro_cas_enPassant = [self.cas_enPassant]  # Registro de casillas en passant anteriores
         self.enroqueBlancoCorto = True
         self.enroqueBlancoLargo = True
         self.enroqueNegroCorto = True
@@ -30,6 +31,7 @@ class Partida:
         self.tablero.casillas[mvm.fil_fin][mvm.col_fin] = mvm.piezaMovida
         self.movimientos.append(mvm)  # Guarda el movimiento en la lista de movimientos
         self.turnoBlanco = not self.turnoBlanco  # Cambia el turno
+
         if mvm.piezaMovida.tipo == "K":  # Actualiza las posiciones del rey si se mueve
             if mvm.piezaMovida.color == "w":
                 self.casillaReyBlanco = (mvm.fil_fin, mvm.col_fin)
@@ -58,6 +60,7 @@ class Partida:
                     self.tablero.casillas[mvm.fil_fin][mvm.col_fin - 2]
                 self.tablero.casillas[mvm.fil_fin][mvm.col_fin - 2] = None
 
+        self.registro_cas_enPassant.append(self.cas_enPassant)  # Guarda la casilla en passant en el registro
         self.actualizarEnroques(mvm)  # Actualiza los enroques posibles
         self.registroEnroquesPosibles.append(EnroquesPosibles(self.enroqueBlancoCorto, self.enroqueNegroCorto,
                                                               self.enroqueBlancoLargo, self.enroqueNegroLargo))
@@ -79,10 +82,9 @@ class Partida:
             if mvm.enPassant:
                 self.tablero.casillas[mvm.fil_fin][mvm.col_fin] = None
                 self.tablero.casillas[mvm.fil_inicio][mvm.col_fin] = mvm.piezaCapturada
-                self.cas_enPassant = (mvm.fil_fin, mvm.col_fin)
 
-            if mvm.piezaMovida.tipo == 'p' and abs(mvm.fil_inicio - mvm.fil_fin) == 2:
-                self.cas_enPassant = ()
+            self.registro_cas_enPassant.pop()
+            self.cas_enPassant = self.registro_cas_enPassant[-1]
 
             self.registroEnroquesPosibles.pop()
             enroquesPosibles = self.registroEnroquesPosibles[-1]
@@ -424,6 +426,24 @@ class Partida:
                 elif mvm.col_inicio == 0:
                     self.enroqueNegroLargo = False
 
+        if mvm.piezaCapturada is not None:
+            if mvm.piezaCapturada.tipo == "R" and mvm.piezaCapturada.color == "w":
+                if mvm.fil_fin == 7:
+                    if mvm.col_fin == 7:
+                        self.enroqueBlancoCorto = False
+                    elif mvm.col_fin == 0:
+                        self.enroqueBlancoLargo = False
+            elif mvm.piezaCapturada.tipo == "R" and mvm.piezaCapturada.color == "b":
+                if mvm.fil_fin == 0:
+                    if mvm.col_fin == 7:
+                        self.enroqueNegroCorto = False
+                    elif mvm.col_fin == 0:
+                        self.enroqueNegroLargo = False
+
+
+class GeneradorMovimientos:
+    pass
+
 
 class Tablero:
     def __init__(self):
@@ -485,20 +505,19 @@ class Movimiento:
         return False
 
     def getNotacion(self) -> str:
-        # Puede realizarse la notación real del ajedrez
-        tipo = ''
-        if self.piezaMovida is not None:
-            tipo = self.piezaMovida.tipo if self.piezaMovida.tipo != "p" else ""
-        cap = 'x' if self.piezaCapturada is not None else ""
-        col_cap = self.columnas_inv[self.col_inicio] if \
-            (self.piezaCapturada is not None and self.piezaMovida.tipo != 'Q') else ""
-        fn = self.columnas_inv[self.col_fin] + self.filas_inv[self.fil_fin]
         if self.enroque:
             return "0-0" if self.col_fin == 6 else "0-0-0"
+        tipo = ''
+        if self.piezaMovida is not None:
+            tipo = self.piezaMovida.tipo if self.piezaMovida.tipo != 'p' else ''
+        cap = 'x' if self.piezaCapturada is not None else ''
+        col_cap = self.columnas_inv[self.col_inicio] if \
+            (self.piezaCapturada is not None and self.piezaMovida.tipo != 'Q') else ''
+        fn = self.columnas_inv[self.col_fin] + self.filas_inv[self.fil_fin]
         return tipo + col_cap + cap + fn
 
 
 class Jugador:
-    def __init__(self, nombre='', humano=True):
+    def __init__(self, nombre='', humano=True) -> None:
         self.nombre = nombre
         self.humano = humano

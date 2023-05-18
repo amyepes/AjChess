@@ -4,7 +4,8 @@ import random
 valor_piezas = {'K': 0, 'Q': 10, 'R': 5, 'B': 3, 'N': 3, 'p': 1}
 JAQUEMATE = 1000
 TABLAS = 0
-PROFUNDIDAD = 2  # Profundidad del árbol de búsqueda, no sobrepasarse de 4
+PROFUNDIDAD = 3  # Profundidad del árbol de búsqueda, no sobrepasarse de 4
+global mov_siguiente
 
 
 def getMovimientoAleatorio(movs_legales):
