@@ -219,15 +219,6 @@ class Partida:
                         self.funcionesMovimiento[pieza.tipo](self, fila, col, movs)  # Llama a la función adecuada
         return movs
 
-    def Casilla_Atacada(self, fila, col) -> bool:
-        self.turnoBlanco = not self.turnoBlanco
-        movs_oponente = self.movimientos_posibles()
-        self.turnoBlanco = not self.turnoBlanco
-        for m in movs_oponente:
-            if m.fil_fin == fila and m.col_fin == col:
-                return True
-        return False
-
     def getEnroques(self, fil, col, movs):
         if (self.turnoBlanco and self.registroEnroquesPosibles[-1].eBC) or (
                 not self.turnoBlanco and self.registroEnroquesPosibles[-1].eNC):
@@ -238,14 +229,16 @@ class Partida:
 
     def getEnroqueCorto(self, fil, col, movs):
         if self.tablero.casillas[fil][col + 1] is None and self.tablero.casillas[fil][col + 2] is None:
-            if not self.Casilla_Atacada(fil, col + 1) and not self.Casilla_Atacada(fil, col + 2):
+            if not GeneradorMovimientos.Casilla_Atacada(self, fil, col + 1) and \
+                    not GeneradorMovimientos.Casilla_Atacada(self, fil, col + 2):
                 movs.append(Movimiento((fil, col), (fil, col + 2), self.tablero, enroque=True))
 
     def getEnroqueLargo(self, fil, col, movs):
         if self.tablero.casillas[fil][col - 1] is None and self.tablero.casillas[fil][col - 2] is None \
                 and self.tablero.casillas[fil][col - 3] is None:
-            if not self.Casilla_Atacada(fil, col - 1) and not self.Casilla_Atacada(fil, col - 2) and \
-                    not self.Casilla_Atacada(fil, col - 3):
+            if not GeneradorMovimientos.Casilla_Atacada(self, fil, col - 1) and \
+                    not GeneradorMovimientos.Casilla_Atacada(self, fil, col - 2) and \
+                    not GeneradorMovimientos.Casilla_Atacada(self, fil, col - 3):
                 movs.append(Movimiento((fil, col), (fil, col - 2), self.tablero, enroque=True))
 
     def actualizarEnroques(self, mvm):
@@ -283,7 +276,17 @@ class Partida:
                         self.enroqueNegroLargo = False
 
 
+# noinspection PyAttributeOutsideInit
 class GeneradorMovimientos:
+    def Casilla_Atacada(partida, fila, col) -> bool:
+        partida.turnoBlanco = not partida.turnoBlanco
+        movs_oponente = partida.movimientos_posibles()
+        partida.turnoBlanco = not partida.turnoBlanco
+        for m in movs_oponente:
+            if m.fil_fin == fila and m.col_fin == col:
+                return True
+        return False
+
     def getMovimientosPeon(partida, fila, col, movs):
         piezaClavada = False
         drc_clavada = ()
@@ -510,6 +513,7 @@ class Pieza:
         self.nombre = nombre
         self.color = nombre[0]
         self.tipo = nombre[1]
+        # Las piezas utilizan una notación de dos caracteres en inglés: color y tipo
 
 
 class EnroquesPosibles:

@@ -9,7 +9,7 @@ COLOR_OPCION_SELECCIONADA = (255, 255, 255)
 
 # Configuración de música
 MUSICA_FONDO = "Lethal-Industry.mp3"
-VOLUMEN_MUSICA = 0.5
+volumen_soundtrack = 0.4
 
 # Dimensiones de la pantalla
 ANCHO_PANTALLA = 800
@@ -25,7 +25,7 @@ class Menu:
 
     def mostrar_menu(self):
         pg.mixer.music.load(MUSICA_FONDO)
-        pg.mixer.music.set_volume(VOLUMEN_MUSICA)
+        pg.mixer.music.set_volume(volumen_soundtrack)
         pg.mixer.music.play(-1)
 
         while True:
@@ -41,7 +41,7 @@ class Menu:
                     elif event.key == pg.K_RETURN:
                         if self.seleccionado == 0:
                             # Lógica para iniciar el juego
-                            Main.main()
+                            Main.main(j1=False, j2=False)
                             pg.display.set_mode((ANCHO_PANTALLA, ALTO_PANTALLA))
                         elif self.seleccionado == 1:
                             # Lógica para opciones

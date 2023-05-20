@@ -24,7 +24,7 @@ def CargaImagen():
         imgs[pz] = pg.transform.scale(pg.image.load("images/" + pz + ".png"), (TAM_CASILLA, TAM_CASILLA))
 
 
-def main():
+def main(j1=True, j2=True):
     pg.init()
     pantalla = pg.display.set_mode((ANCHO_T + ANCHO_MOV, ALTURA_T))
     reloj = pg.time.Clock()
@@ -44,8 +44,8 @@ def main():
     procesoAI = None
     mov_deshecho = False
 
-    jugador1 = Motor.Jugador(humano=False)
-    jugador2 = Motor.Jugador(humano=False)
+    jugador1 = Motor.Jugador(humano=j1)
+    jugador2 = Motor.Jugador(humano=j2)
 
     while ejecutando:
         turno_humano = (partida.turnoBlanco and jugador1.humano) or (not partida.turnoBlanco and jugador2.humano)

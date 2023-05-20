@@ -80,39 +80,6 @@ def getMejorMovimiento(partida, movs_legales, cola):
     cola.put(mov_siguiente)
 
 
-def getMovimientoMinmax(partida, movs_legales, profundidad, turnoblanco):
-    global mov_siguiente
-    if profundidad == 0:
-        return ValorMaterial(partida.tablero)
-
-    if turnoblanco:
-        puntaje_max = -JAQUEMATE
-        for mov in movs_legales:
-            partida.Mover(mov)
-            mvl = partida.movimientos_legales()
-            random.shuffle(mvl)
-            puntaje = getMovimientoMinmax(partida, mvl, profundidad - 1, False)
-            if puntaje > puntaje_max:
-                puntaje_max = puntaje
-                if profundidad == PROFUNDIDAD:
-                    mov_siguiente = mov
-            partida.Deshacer()
-        return puntaje_max
-    else:
-        puntaje_min = JAQUEMATE
-        for mov in movs_legales:
-            partida.Mover(mov)
-            mvl = partida.movimientos_legales()
-            random.shuffle(mvl)
-            puntaje = getMovimientoMinmax(partida, mvl, profundidad - 1, True)
-            if puntaje < puntaje_min:
-                puntaje_min = puntaje
-                if profundidad == PROFUNDIDAD:
-                    mov_siguiente = mov
-            partida.Deshacer()
-        return puntaje_min
-
-
 def getMovimientoNegaMax(partida, movs_legales, profundidad, signo_turno):
     global mov_siguiente
     if profundidad == 0:
@@ -154,18 +121,6 @@ def getMovimientoNegaMaxAlfaBeta(partida, movs_legales, profundidad, alfa, beta,
         if alfa >= beta:
             break
     return puntaje_max
-
-
-def ValorMaterial(tablero):
-    puntaje = 0
-    for f in range(len(tablero.casillas)):
-        for c in range(len(tablero.casillas[0])):
-            if tablero.casillas[f][c] is not None:
-                if tablero.casillas[f][c].color == 'w':
-                    puntaje += valor_piezas[tablero.casillas[f][c].tipo]
-                elif tablero.casillas[f][c].color == 'b':
-                    puntaje -= valor_piezas[tablero.casillas[f][c].tipo]
-    return puntaje
 
 
 def ValorTablero(partida):
