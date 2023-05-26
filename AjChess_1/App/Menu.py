@@ -17,15 +17,15 @@ ALTO_PANTALLA = 475
 
 IMG_FONDO = pg.image.load("pictures/ajchess_logo.png")
 
-JUGADOR1 = True
+JUGADOR1 = False
 JUGADOR2 = False
 TIEMPO_LIM = 900
-DIFF = 3
+DIFF = 4
 
 
 class Menu:
     def __init__(self, opciones):
-        self.opciones = opciones
+        self.opciones: list = opciones
         self.font_titulo = pg.font.Font(None, 80)
         self.font_opciones = pg.font.Font(None, 40)
         self.seleccionado = 0
@@ -111,12 +111,12 @@ class Menu:
 if __name__ == "__main__":
     pg.init()
     pantalla = pg.display.set_mode((ANCHO_PANTALLA, ALTO_PANTALLA))
-    pg.display.set_caption("AjChess")
-    pg.mixer.init()
+    pg.display.set_caption("AjChess - Menú")
 
-    pg.mixer.music.load(MUSICA_FONDO)
-    pg.mixer.music.set_volume(volumen_soundtrack)
-    pg.mixer.music.play(-1)
+    # pg.mixer.init()
+    # pg.mixer.music.load(MUSICA_FONDO)
+    # pg.mixer.music.set_volume(volumen_soundtrack)
+    # pg.mixer.music.play(-1)
 
     opciones_menu = ["Jugar", "Opciones", "Ayuda", "Salir"]
     men = Menu(opciones_menu)
