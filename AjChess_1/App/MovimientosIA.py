@@ -57,13 +57,21 @@ valor_peonnegro = [[0 for _ in range(8)],
                    [8 for _ in range(8)],
                    [8 for _ in range(8)]]
 
+valor_rey = [[3, 3, 4, 3, 3, 4, 3, 3],
+             [2, 2, 3, 3, 3, 3, 2, 2],
+             [2, 3, 2, 1, 1, 2, 3, 2],
+             [2, 3, 1, 1, 1, 1, 3, 2],
+             [2, 3, 1, 1, 1, 1, 3, 2],
+             [2, 3, 2, 1, 1, 2, 3, 2],
+             [2, 2, 3, 3, 3, 3, 2, 2],
+             [3, 3, 4, 3, 3, 4, 3, 3]]
+
 valor_piezas_pos = {'N': valor_caballo, 'B': valor_alfil, 'Q': valor_reina, 'R': valor_torre,
-                    'bp': valor_peonnegro, 'wp': valor_peonblanco}
+                    'bp': valor_peonnegro, 'wp': valor_peonblanco, 'K': valor_rey}
 
 JAQUEMATE = 1000
 TABLAS = 0
-PROFUNDIDAD = 3  # Profundidad del árbol de búsqueda, no sobrepasarse de 4
-global mov_siguiente
+global mov_siguiente, profundidad_global
 
 
 def getMovimientoAleatorio(movs_legales):
@@ -71,12 +79,13 @@ def getMovimientoAleatorio(movs_legales):
 
 
 # Método auxiliar para el algoritmo MinMax
-def getMejorMovimiento(partida, movs_legales, cola):
-    global mov_siguiente
+def getMejorMovimiento(partida, movs_legales, profundidad, cola):
+    global mov_siguiente, profundidad_global
     mov_siguiente = None
+    profundidad_global = profundidad
     random.shuffle(movs_legales)
     getMovimientoNegaMaxAlfaBeta(partida, movs_legales,
-                                 PROFUNDIDAD, -JAQUEMATE, JAQUEMATE, 1 if partida.turnoBlanco else -1)
+                                 profundidad, -JAQUEMATE, JAQUEMATE, 1 if partida.turnoBlanco else -1)
     cola.put(mov_siguiente)
 
 
@@ -93,7 +102,7 @@ def getMovimientoNegaMax(partida, movs_legales, profundidad, signo_turno):
         puntaje = -getMovimientoNegaMax(partida, mvl, profundidad - 1, -signo_turno)
         if puntaje > puntaje_max:
             puntaje_max = puntaje
-            if profundidad == PROFUNDIDAD:
+            if profundidad == profundidad_global:
                 mov_siguiente = mov
         partida.Deshacer()
     return puntaje_max
@@ -113,7 +122,7 @@ def getMovimientoNegaMaxAlfaBeta(partida, movs_legales, profundidad, alfa, beta,
         puntaje = -getMovimientoNegaMaxAlfaBeta(partida, mvl, profundidad - 1, -beta, -alfa, -signo_turno)
         if puntaje > puntaje_max:
             puntaje_max = puntaje
-            if profundidad == PROFUNDIDAD:
+            if profundidad == profundidad_global:
                 mov_siguiente = mov
         partida.Deshacer()
         if puntaje_max > alfa:
@@ -142,11 +151,10 @@ def ValorTablero(partida):
             if p is not None:
                 puntaje_p_pos = 0
 
-                if p.tipo != 'K':  # No se toma en cuenta la posición del rey
-                    if p.tipo == 'p':
-                        puntaje_p_pos = valor_piezas_pos[p.nombre][f][c]
-                    else:
-                        puntaje_p_pos = valor_piezas_pos[p.tipo][f][c]
+                if p.tipo == 'p':
+                    puntaje_p_pos = valor_piezas_pos[p.nombre][f][c]
+                else:
+                    puntaje_p_pos = valor_piezas_pos[p.tipo][f][c]
 
                 if p.color == 'w':
                     puntaje += valor_piezas[p.tipo] + puntaje_p_pos * .2

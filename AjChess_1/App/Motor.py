@@ -563,8 +563,9 @@ class Movimiento:
         if self.piezaMovida is not None:
             tipo = self.piezaMovida.tipo if self.piezaMovida.tipo != 'p' else ''
         cap = 'x' if self.piezaCapturada is not None else ''
-        col_cap = self.columnas_inv[self.col_inicio] if \
-            (self.piezaCapturada is not None and self.piezaMovida.tipo != 'Q') else ''
+        col_cap = self.columnas_inv[self.col_inicio] if (self.piezaCapturada is not None
+                                                         and not (self.piezaMovida.tipo == 'Q'
+                                                                  or self.piezaMovida.tipo == 'K')) else ''
         fn = self.columnas_inv[self.col_fin] + self.filas_inv[self.fil_fin]
         return tipo + col_cap + cap + fn
 
