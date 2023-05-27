@@ -180,6 +180,7 @@ def main(j1=False, j2=True, tiempo_lim=TIEMPO_LIM, prof_ia=PROF_IA):
 
         if sw_tiempo == 1:
             tiempo_inicio_n = time.time()
+            sw_tiempo += 1
 
         if not gameOver:
             if partida.turnoBlanco:

@@ -20,7 +20,7 @@ IMG_FONDO = pg.image.load("pictures/ajchess_logo.png")
 JUGADOR1 = False
 JUGADOR2 = False
 TIEMPO_LIM = 900
-DIFF = 4
+DIFF = 3
 
 
 class Menu:
@@ -47,7 +47,7 @@ class Menu:
                             Main.main(j1=JUGADOR1, j2=JUGADOR2, tiempo_lim=TIEMPO_LIM, prof_ia=DIFF)
                             pg.display.set_mode((ANCHO_PANTALLA, ALTO_PANTALLA))
                         elif self.seleccionado == 1:
-                            opciones = ["Dificultad", "IA", "Volumen", "Regresar"]
+                            opciones = ["Dificultad", "Modos", "Volumen", "Regresar"]
                             op = Menu(opciones)
                             op.mostrar_menu()
                             pass
