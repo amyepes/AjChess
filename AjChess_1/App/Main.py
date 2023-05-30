@@ -396,17 +396,3 @@ def dibujarTextoFinal(pantalla, texto):
 
 if __name__ == "__main__":
     main()
-
-# Mejoras futuras de interfaz:
-# -Change color of board/pieces - different piece skins
-# -Mouse click/drag for pieces
-#
-# Mejoras futuras del motor:
-# -Add 50 move draw and 3 move repeating draw rule
-# -Move ordering - look at checks, captures and threats first, prioritize castling/king safety, look at pawn moves
-#   last (this will improve alpha-beta pruning). Also start with moves that previously
-#   scored higher (will also improve pruning).
-# -Calculate both players moves given a position
-# -Change move calculation to make it more efficient. Instead of recalculating all moves, start with moves
-#   from previous board and change based on last move made
-# -If move is a capture move, even at max depth, continue evaluating until no captures remain
