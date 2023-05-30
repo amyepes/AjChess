@@ -1,3 +1,5 @@
+""" Módulo que se encarga de dibujar el menú principal del juego."""
+
 import pygame as pg
 import Main
 

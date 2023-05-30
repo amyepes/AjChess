@@ -33,7 +33,7 @@ def CargaImagen():
         imgs[pz] = pg.transform.scale(pg.image.load("images/" + pz + ".png"), (TAM_CASILLA, TAM_CASILLA))
 
 
-def main(j1=False, j2=True, tiempo_lim=TIEMPO_LIM, prof_ia=PROF_IA):
+def main(j1=False, j2=False, tiempo_lim=TIEMPO_LIM, prof_ia=PROF_IA):
     global tablero_invertido
     pg.init()
     pg.mixer.init()
@@ -74,7 +74,8 @@ def main(j1=False, j2=True, tiempo_lim=TIEMPO_LIM, prof_ia=PROF_IA):
     tb_lim = tn_lim = tiempo_lim  # Tiempo límite para las blancas en segundos
     tb = tb_lim
     tn = tn_lim
-    sw_tiempo = 0
+    sw_tiempo_n = False
+    sw_tiempo_b = True
 
     while ejecutando:
         turno_humano = (partida.turnoBlanco and jugador1.humano) or (not partida.turnoBlanco and jugador2.humano)
@@ -109,24 +110,26 @@ def main(j1=False, j2=True, tiempo_lim=TIEMPO_LIM, prof_ia=PROF_IA):
                                 CasillaSeleccionada = ()
                                 clicks = []
                                 ReproducirSonido(movimientos_legales[i], fx)
-                                sw_tiempo += 1
+                                sw_tiempo_n = not sw_tiempo_n
+                                sw_tiempo_b = not sw_tiempo_b
                         if not mov_sw:
                             clicks = [CasillaSeleccionada]
 
             elif e.type == pg.KEYDOWN:  # Evento de tecla presionada
 
                 if e.key == pg.K_z:  # Tecla z para deshacer el último movimiento
-                    partida.Deshacer()
-                    CasillaSeleccionada = ()
-                    clicks = []
-                    mov_sw = True
-                    if not jugador1.humano or not jugador2.humano:
-                        turno_humano = not turno_humano
-                    gameOver = False
-                    if ejecutandoAI:
-                        procesoAI.terminate()
-                        ejecutandoAI = False
-                    mov_deshecho = True
+                    if tiempo_lim == 0:  # Si no hay límite de tiempo es posible deshacer movimientos
+                        partida.Deshacer()
+                        CasillaSeleccionada = ()
+                        clicks = []
+                        mov_sw = True
+                        if not jugador1.humano or not jugador2.humano:
+                            turno_humano = not turno_humano
+                        gameOver = False
+                        if ejecutandoAI:
+                            procesoAI.terminate()
+                            ejecutandoAI = False
+                        mov_deshecho = True
 
                 if e.key == pg.K_r:  # Tecla r para reiniciar la partida
                     partida = Motor.Partida()
@@ -135,7 +138,8 @@ def main(j1=False, j2=True, tiempo_lim=TIEMPO_LIM, prof_ia=PROF_IA):
                     clicks = []
                     mov_sw = False
                     gameOver = False
-                    sw_tiempo = 0
+                    sw_tiempo_b = False
+                    sw_tiempo_n = False
                     tiempo_inicio_n = tiempo_inicio_b = time.time()
                     tb_lim = tn_lim = tiempo_lim
                     tb = tb_lim
@@ -168,6 +172,8 @@ def main(j1=False, j2=True, tiempo_lim=TIEMPO_LIM, prof_ia=PROF_IA):
                     mov_ia = MovimientosIA.getMovimientoAleatorio(movimientos_legales)
                 partida.Mover(mov_ia)
                 ReproducirSonido(mov_ia, fx)
+                sw_tiempo_n = not sw_tiempo_n
+                sw_tiempo_b = not sw_tiempo_b
                 mov_sw = True
                 ejecutandoAI = False
 
@@ -178,11 +184,15 @@ def main(j1=False, j2=True, tiempo_lim=TIEMPO_LIM, prof_ia=PROF_IA):
 
         MostrarPartida(pantalla, partida, movimientos_legales, CasillaSeleccionada, fuente_movimientos)
 
-        if sw_tiempo == 1:
-            tiempo_inicio_n = time.time()
-            sw_tiempo += 1
-
         if not gameOver:
+
+            if sw_tiempo_b:
+                tn_lim = tn
+                tiempo_inicio_n = time.time()
+            elif sw_tiempo_n:
+                tb_lim = tb
+                tiempo_inicio_b = time.time()
+
             if partida.turnoBlanco:
                 tiempo_transcurrido = int(time.time() - tiempo_inicio_b)
                 tb = max(tb_lim - tiempo_transcurrido, 0)  # Calcular el tiempo restante para las blancas
@@ -390,8 +400,6 @@ def dibujarTextoFinal(pantalla, texto):
     locacion_texto = pg.Rect(0, 0, ANCHO_T, ALTURA_T).move(ANCHO_T / 2 - obj_texto.get_width() / 2, ALTURA_T
                                                            / 2 - obj_texto.get_height() / 2)
     pantalla.blit(obj_texto, locacion_texto)
-    # obj_texto = fuente.render(texto, 0, pg.Color('Gray'))
-    # pantalla.blit(obj_texto, locacion_texto.move(2, 2))
 
 
 if __name__ == "__main__":

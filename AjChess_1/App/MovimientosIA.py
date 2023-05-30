@@ -1,4 +1,5 @@
-""" Módulo que contiene los métodos de movimientos generados por IA. """
+""" Módulo que contiene los métodos de movimientos generados por un algoritmo. """
+
 import random
 
 valor_piezas = {'K': 0, 'Q': 10, 'R': 5, 'B': 3, 'N': 3, 'p': 1}

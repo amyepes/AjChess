@@ -50,7 +50,7 @@ class Partida:
             self.tablero.casillas[mvm.fil_inicio][mvm.col_fin] = None  # Elimina el peón capturado
 
         if mvm.coronacionPeon:  # Si el peón se corona
-            print('Promote to Q, R, B or N: ')  # Añadir a GUI, piezaPromovida
+            print('Promoción!')  # Añadir a GUI, piezaPromovida
             self.tablero.casillas[mvm.fil_fin][mvm.col_fin] = Pieza(mvm.piezaMovida.color + "Q")
 
         if mvm.enroque:
